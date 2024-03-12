@@ -2,26 +2,32 @@
 #include <ESP8266WiFi.h>
 #include <Firebase_ESP_Client.h>
 #include <DHT.h>
-
+#include <LiquidCrystal_I2C.h>
 // Declaration
 #define DHT_SENSOR_PIN 4
 #define DHT_SENSOR_TYPE DHT11
-#define Buzzer D2
-#define Fire_analog A0
-#define Fire_digital D1
+
+int  Buzzer = D2;
+int Fire_analog = A0;
+int Fire_digital =D1;
 
 DHT dht_sensor(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
-FLAME flame_sensor(Buzzer, Fire_analog, Fire_digital);
 
 // Provide the token generation process info.
 #include "addons/TokenHelper.h"
 // Provide the RTDB payload printing info and other helper functions.
 #include "addons/RTDBHelper.h"
-
+// LCD Configuration
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 // Insert your network credentials
-#define WIFI_SSID "YOUR_WIFI_NAME_SSID"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+#define WIFI_SSID "awik"
+#define WIFI_PASSWORD "banyak12345"
 
+// Insert Firebase project API Key
+#define API_KEY "AIzaSyAmrPo2-DLauHYLQl7qBrjxb5w8bfaCvsE"
+
+// Insert RTDB URLefine the RTDB URL */
+#define DATABASE_URL "https://green-guardian-14c4a-default-rtdb.asia-southeast1.firebasedatabase.app/" 
 
 // Define Firebase Data object
 FirebaseData fbdo;
@@ -33,8 +39,13 @@ bool signupOK = false;
 
 void setup() {
   dht_sensor.begin();
-  flame_sensor.begin();
+  pinMode(Buzzer, OUTPUT);      
+  pinMode(Fire_digital, INPUT);
   Serial.begin(115200);
+  lcd.init(); // Initialize the LCD
+  lcd.backlight(); // Turn on the backlight
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing...");
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -73,7 +84,20 @@ void loop() {
   // can use it later in the database
   float temperature = dht_sensor.readTemperature();
   float humidity = dht_sensor.readHumidity();
-  int firesensorAnalog = flame_sensor.readAnalog();
+  int firesensorAnalog = analogRead(Fire_analog);
+  int firesensorDigital = digitalRead(Fire_digital);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(temperature);
+  lcd.print("C");
+  lcd.setCursor(0, 1);
+  lcd.print("Humidity: ");
+  lcd.print(humidity);
+  lcd.print("%");
+
+
 
   if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)) {
     // Since we want the data to be updated every second
@@ -97,7 +121,13 @@ void loop() {
       Serial.println("Reason: " + fbdo.errorReason());
     }
   }
-
+  Serial.print("Fire Sensor: ");
+  Serial.print(firesensorAnalog);
+  Serial.print("\t");
+  Serial.print("Fire Class: ");
+  Serial.print(firesensorDigital);
+  Serial.print("\t");
+  Serial.print("\t");
   if (firesensorAnalog < 1000) {
     Serial.println("Fire detected");
     digitalWrite(Buzzer, HIGH); // Send tone
