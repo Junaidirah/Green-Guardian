@@ -23,11 +23,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 #define WIFI_SSID "awik"
 #define WIFI_PASSWORD "banyak12345"
 
-// Insert Firebase project API Key
-#define API_KEY "AIzaSyAmrPo2-DLauHYLQl7qBrjxb5w8bfaCvsE"
 
-// Insert RTDB URLefine the RTDB URL */
-#define DATABASE_URL "https://green-guardian-14c4a-default-rtdb.asia-southeast1.firebasedatabase.app/" 
 
 // Define Firebase Data object
 FirebaseData fbdo;
